@@ -21,15 +21,16 @@ import LLVM.General.Internal.Coding
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Unsafe as BS
-import qualified Data.ByteString.UTF8 as BSUTF8
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 newtype UTF8ByteString = UTF8ByteString { utf8Bytes :: BS.ByteString }
 
 instance (Monad e) => EncodeM e String UTF8ByteString where
-  encodeM = return . UTF8ByteString . BSUTF8.fromString
+  encodeM = return . UTF8ByteString . TE.encodeUtf8 . T.pack
 
 instance (Monad d) => DecodeM d String UTF8ByteString where
-  decodeM = return . BSUTF8.toString . utf8Bytes
+  decodeM = return . T.unpack . TE.decodeUtf8 . utf8Bytes
 
 instance (MonadAnyCont IO e) => EncodeM e String CString where
   encodeM s = anyContToM (BS.unsafeUseAsCString . utf8Bytes =<< encodeM (s ++ "\0"))
